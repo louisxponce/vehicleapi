@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"vehicleapi/middleware"
+	"github.com/louisxponce/vehicleapi/middleware"
 )
 
 type Vehicle struct {

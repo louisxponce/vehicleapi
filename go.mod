@@ -1,4 +1,4 @@
-module vehicleapi
+module github.com/louisxponce/vehicleapi
 
 go 1.24.1
 
