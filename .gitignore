@@ -26,3 +26,4 @@ go.work.sum
 
 # vehicleapi specific
 clients.json
+data.json
