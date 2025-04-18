@@ -20,21 +20,6 @@ var jwtKey []byte
 var tokenExpiry time.Duration
 var httpPort string
 
-func extractCredentials(r *http.Request) (string, string) {
-	clientId := r.FormValue("client_id")
-	clientSecret := r.FormValue("client_secret")
-
-	if clientId == "" && clientSecret == "" {
-		username, password, ok := r.BasicAuth()
-
-		if ok {
-			clientId = username
-			clientSecret = password
-		}
-	}
-	return clientId, clientSecret
-}
-
 func main() {
 
 	loadEnv()

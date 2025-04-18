@@ -12,7 +12,16 @@ import (
 
 func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Extracting credentials")
-	clientId, clientSecret := extractCredentials(r)
+	clientId := r.FormValue("client_id")
+	clientSecret := r.FormValue("client_secret")
+	if clientId == "" && clientSecret == "" {
+		username, password, ok := r.BasicAuth()
+		if ok {
+			clientId = username
+			clientSecret = password
+		}
+	}
+
 	client, ok := clients[clientId]
 	if !ok || clientSecret != client.Secret {
 		unauthorized(w, "Invalid client credentials")
