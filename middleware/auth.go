@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -15,7 +16,7 @@ type contextKey string
 
 const claimsKey contextKey = "jwtClaims"
 
-func AuthMiddleware(jwtKey []byte) func(http.HandlerFunc) http.HandlerFunc {
+func AuthMiddleware(publicKey *rsa.PublicKey) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 
@@ -27,10 +28,10 @@ func AuthMiddleware(jwtKey []byte) func(http.HandlerFunc) http.HandlerFunc {
 
 			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
 				// Validate the signing method
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 				}
-				return jwtKey, nil
+				return publicKey, nil
 			})
 
 			if err != nil || !token.Valid {

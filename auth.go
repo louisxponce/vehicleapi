@@ -28,7 +28,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Creating token")
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"sub":   clientId,
 		"exp":   time.Now().Add(tokenExpiry).Unix(),
 		"iat":   time.Now().Unix(),
@@ -36,8 +36,9 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	log.Printf("Signing token")
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(privateKey)
 	if err != nil {
+		log.Printf("Failed to sign token. %v", err)
 		http.Error(w, "Failed to sign token", http.StatusInternalServerError)
 		return
 	}
