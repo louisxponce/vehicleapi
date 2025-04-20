@@ -32,10 +32,10 @@ func main() {
 	loadClientIds()
 
 	// Benchmark how long it takes to read the data into memory
-	start := time.Now()
+	// start := time.Now()
 	loadData()
-	elapsed := time.Since(start)
-	log.Printf("Handling time: %s", elapsed)
+	// elapsed := time.Since(start)
+	// log.Printf("Handling time: %s", elapsed)
 
 	log.Printf("Setting up http server")
 	mux := http.NewServeMux()

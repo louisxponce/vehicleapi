@@ -27,6 +27,7 @@ go.work.sum
 # vehicleapi specific
 clients.json
 data.json
+vehicles.db*
 # ignore Go build output
 vehicleapi
 

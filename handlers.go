@@ -1,82 +1,85 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
 func getAll(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
-	// brandFilter := strings.ToLower(r.URL.Query().Get("brandFilter"))
-
-	// if brandFilter == "" {
-	// 	log.Printf("no filter applied. returning unfiltered results.")
-	// 	json.NewEncoder(w).Encode(rawVehicleData)
-	// 	return
-	// }
-
 	brand := strings.ToLower(r.URL.Query().Get("brand"))
 	model := strings.ToLower(r.URL.Query().Get("model"))
 	yearStr := r.URL.Query().Get("year")
 
-	if brand == "" && model == "" && yearStr == "" {
-		log.Println("No filters applied. Returning unfiltered results.")
-		json.NewEncoder(w).Encode(rawVehicleData)
+	// Build up the SELECT statement depending on the different filters
+	var args []interface{}
+	clauses := []string{}
+
+	if brand != "" {
+		clauses = append(clauses, "LOWER(brand) LIKE ?")
+		args = append(args, "%"+brand+"%")
+	}
+
+	if model != "" {
+		clauses = append(clauses, "LOWER(model) LIKE ?")
+		args = append(args, "%"+model+"%")
+	}
+
+	if yearStr != "" {
+		clauses = append(clauses, "LOWER(year) LIKE ?")
+		args = append(args, "%"+yearStr+"%")
+	}
+
+	query := "SELECT id, brand, model, year FROM vehicle"
+	if len(clauses) > 0 {
+		query += " WHERE " + strings.Join(clauses, " AND ")
+	}
+	log.Printf("%v", query)
+
+	// Prepare the database row
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		log.Printf("Database error. %v", err)
 		return
 	}
 
-	var year int
-	if yearStr != "" {
-		var err error
-		year, err = strconv.Atoi(yearStr)
+	vehicles := []Vehicle{}
+	for rows.Next() {
+		var v Vehicle
+		err := rows.Scan(&v.Id, &v.Brand, &v.Model, &v.Year)
 		if err != nil {
-			http.Error(w, "Invalid year", http.StatusBadRequest)
-			return
+			log.Printf("Scan error: %v", err)
+			continue
 		}
+		vehicles = append(vehicles, v)
 	}
-
-	log.Printf("brand: %s", brand)
-	log.Printf("model: %s", model)
-	log.Printf("year: %d", year)
-
-	// Note. The slice below is initialized slice. It's possible to add to an uninitialzed slice but if the filter
-	// doesn't match anything it will return null in the api and best practice is to return an empty arraay instead.
-	filteredVehicleData := []Vehicle{}
-	// var filteredVehicleData []Vehicle
-	for _, v := range rawVehicleData {
-
-		if brand != "" && !strings.Contains(strings.ToLower(v.Brand), brand) {
-			continue
-		}
-		if model != "" && !strings.Contains(strings.ToLower(v.Model), model) {
-			continue
-		}
-		if yearStr != "" && v.Year != year {
-			continue
-		}
-
-		filteredVehicleData = append(filteredVehicleData, v)
-
-		// if strings.Contains(strings.ToLower(v.Brand), brandFilter) {
-		// 	filteredVehicleData = append(filteredVehicleData, v)
-		// }
-	}
-	json.NewEncoder(w).Encode(filteredVehicleData)
+	json.NewEncoder(w).Encode(vehicles)
 }
 
 func getSingle(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	log.Println("Requested id:", id)
-	for _, v := range rawVehicleData {
-		if v.Id == id {
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(v)
-			return
-		}
+
+	row := db.QueryRow("SELECT id, brand, model, year FROM vehicle WHERE id = ?", id)
+	var v Vehicle
+	err := row.Scan(&v.Id, &v.Brand, &v.Model, &v.Year)
+	if err == sql.ErrNoRows {
+		// log.Printf("No record found.")
+		http.NotFound(w, r)
+		return
 	}
-	http.NotFound(w, r)
+	if err != nil {
+		http.Error(w, "Database error.", http.StatusInternalServerError)
+		log.Printf("DB error: %v", err)
+		return
+	}
+	// log.Printf("Record found. %v", v)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(v)
 }

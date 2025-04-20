@@ -1,18 +1,25 @@
 package main
 
 import (
-	"encoding/json"
+	"database/sql"
 	"log"
-	"os"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
+var db *sql.DB
+
 func loadData() {
-	log.Printf("Loading data into memory...")
-	data, err := os.ReadFile("data.json")
+	var err error
+	db, err = sql.Open("sqlite3", "vehicles.db")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Could not open the database. %v", err)
 	}
 
-	json.Unmarshal(data, &rawVehicleData)
+	_, err = db.Exec("PRAGMA journal_mode=WAL;")
+	if err != nil {
+		log.Fatalf("Failed to enable WAL mode: %v", err)
+	}
 
+	log.Printf("Database ready.")
 }
