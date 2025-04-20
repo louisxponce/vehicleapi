@@ -69,11 +69,3 @@ func unauthorized(w http.ResponseWriter, msg string) {
 		"error_description": msg,
 	})
 }
-
-func GetClaims(r *http.Request) jwt.MapClaims {
-	val := r.Context().Value(claimsKey)
-	if claims, ok := val.(jwt.MapClaims); ok {
-		return claims
-	}
-	return nil
-}

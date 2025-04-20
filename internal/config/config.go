@@ -1,6 +1,7 @@
-package main
+package config
 
 import (
+	"crypto/rsa"
 	"log"
 	"os"
 	"strconv"
@@ -10,7 +11,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func loadEnv() {
+var KeysPath string
+var HttpPort string
+var TokenExpiry time.Duration
+var PrivateKey *rsa.PrivateKey
+var PublicKey *rsa.PublicKey
+
+func LoadEnv() {
 	// Environments vars
 	log.Printf("Loading environment variables...")
 	err := godotenv.Load()
@@ -18,15 +25,8 @@ func loadEnv() {
 		log.Fatalf("Couldn't load .env file.")
 	}
 
-	// // JWT Private Key
-	// key := os.Getenv("JWT_SECRET")
-	// if key == "" {
-	// 	log.Fatalf("Couldn't find JWT_SECRET in env")
-	// }
-	// jwtKey = []byte(key)
-
 	// Path to auth keys
-	keysPath = os.Getenv("RS256KEYS_PATH")
+	KeysPath = os.Getenv("RS256KEYS_PATH")
 
 	// Expiration time
 	tokenExpiryStr := os.Getenv("TOKEN_EXPIRY_SECONDS")
@@ -37,31 +37,31 @@ func loadEnv() {
 	if err != nil {
 		log.Fatalf("Error while converting TOKEN_EXPIRY_SECONDS to int")
 	}
-	tokenExpiry = time.Duration(seconds) * time.Second
+	TokenExpiry = time.Duration(seconds) * time.Second
 
 	// Http port
-	httpPort = os.Getenv("PORT")
-	if httpPort == "" {
+	HttpPort = os.Getenv("PORT")
+	if HttpPort == "" {
 		log.Fatalf("Couldn't find PORT in env")
 	}
 }
 
-func loadKeys() {
-	privBytes, err := os.ReadFile(keysPath + "private.pem")
+func LoadKeys() {
+	privBytes, err := os.ReadFile(KeysPath + "private.pem")
 	if err != nil {
 		log.Fatalf("Error while loading private key. %v", err)
 	}
 
-	privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privBytes)
+	PrivateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privBytes)
 	if err != nil {
 		log.Fatalf("Error while parsing private .pem data. %v", err)
 	}
 
-	pubBytes, err := os.ReadFile(keysPath + "public.pem")
+	pubBytes, err := os.ReadFile(KeysPath + "public.pem")
 	if err != nil {
 		log.Fatalf("Error while loading public key. %v", err)
 	}
-	publicKey, err = jwt.ParseRSAPublicKeyFromPEM(pubBytes)
+	PublicKey, err = jwt.ParseRSAPublicKeyFromPEM(pubBytes)
 	if err != nil {
 		log.Fatalf("Error while parsing public .pem data. %v", err)
 	}

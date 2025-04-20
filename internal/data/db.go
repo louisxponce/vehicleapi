@@ -1,4 +1,4 @@
-package main
+package data
 
 import (
 	"database/sql"
@@ -7,16 +7,16 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
+var DB *sql.DB
 
-func loadData() {
+func InitDB() {
 	var err error
-	db, err = sql.Open("sqlite3", "vehicles.db")
+	DB, err = sql.Open("sqlite3", "vehicles.db")
 	if err != nil {
 		log.Fatalf("Could not open the database. %v", err)
 	}
 
-	_, err = db.Exec("PRAGMA journal_mode=WAL;")
+	_, err = DB.Exec("PRAGMA journal_mode=WAL;")
 	if err != nil {
 		log.Fatalf("Failed to enable WAL mode: %v", err)
 	}
