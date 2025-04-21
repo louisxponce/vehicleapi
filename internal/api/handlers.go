@@ -23,23 +23,27 @@ func GetAll(db *sql.DB) http.HandlerFunc {
 		model := strings.ToLower(r.URL.Query().Get("model"))
 		yearStr := r.URL.Query().Get("year")
 
-		// Build up the SELECT statement depending on the different filters
 		var args []interface{}
-		clauses := []string{}
-
-		if brand != "" {
-			clauses = append(clauses, "LOWER(brand) LIKE ?")
-			args = append(args, "%"+brand+"%")
+		var clauses []string
+		if strings.Contains(brand, "*") {
+			clauses = append(clauses, "brand_lc LIKE ?")
+			args = append(args, strings.ToLower(strings.ReplaceAll(brand, "*", "%")))
+		} else if brand != "" {
+			clauses = append(clauses, "brand_lc = ?")
+			args = append(args, brand)
 		}
 
-		if model != "" {
-			clauses = append(clauses, "LOWER(model) LIKE ?")
-			args = append(args, "%"+model+"%")
+		if strings.Contains(model, "*") {
+			clauses = append(clauses, "model_lc LIKE ?")
+			args = append(args, strings.ToLower(strings.ReplaceAll(model, "*", "%")))
+		} else if model != "" {
+			clauses = append(clauses, "model_lc = ?")
+			args = append(args, model)
 		}
 
 		if yearStr != "" {
-			clauses = append(clauses, "LOWER(year) LIKE ?")
-			args = append(args, "%"+yearStr+"%")
+			clauses = append(clauses, "year = ?")
+			args = append(args, yearStr)
 		}
 
 		query := "SELECT id, brand, model, year FROM vehicle"
