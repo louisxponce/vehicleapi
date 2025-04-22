@@ -11,13 +11,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var KeysPath string
-var HttpPort string
-var TokenExpiry time.Duration
-var PrivateKey *rsa.PrivateKey
-var PublicKey *rsa.PublicKey
+type Config struct {
+	HttpPort    string
+	TokenExpiry time.Duration
+	PrivateKey  *rsa.PrivateKey
+	PublicKey   *rsa.PublicKey
+}
 
-func LoadEnv() {
+func LoadConfig() *Config {
 	// Environments vars
 	log.Printf("Loading environment variables...")
 	err := godotenv.Load()
@@ -26,7 +27,7 @@ func LoadEnv() {
 	}
 
 	// Path to auth keys
-	KeysPath = os.Getenv("RS256KEYS_PATH")
+	var config Config
 
 	// Expiration time
 	tokenExpiryStr := os.Getenv("TOKEN_EXPIRY_SECONDS")
@@ -37,32 +38,37 @@ func LoadEnv() {
 	if err != nil {
 		log.Fatalf("Error while converting TOKEN_EXPIRY_SECONDS to int")
 	}
-	TokenExpiry = time.Duration(seconds) * time.Second
+	config.TokenExpiry = time.Duration(seconds) * time.Second
 
 	// Http port
-	HttpPort = os.Getenv("PORT")
-	if HttpPort == "" {
+	config.HttpPort = os.Getenv("PORT")
+	if config.HttpPort == "" {
 		log.Fatalf("Couldn't find PORT in env")
 	}
+
+	config.PrivateKey, config.PublicKey = loadKeys(os.Getenv("RS256KEYS_PATH"))
+	return &config
 }
 
-func LoadKeys() {
-	privBytes, err := os.ReadFile(KeysPath + "private.pem")
+func loadKeys(keysPath string) (*rsa.PrivateKey, *rsa.PublicKey) {
+	privBytes, err := os.ReadFile(keysPath + "private.pem")
 	if err != nil {
 		log.Fatalf("Error while loading private key. %v", err)
 	}
 
-	PrivateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privBytes)
+	// var privateKey *rsa.PrivateKey
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privBytes)
 	if err != nil {
 		log.Fatalf("Error while parsing private .pem data. %v", err)
 	}
 
-	pubBytes, err := os.ReadFile(KeysPath + "public.pem")
+	pubBytes, err := os.ReadFile(keysPath + "public.pem")
 	if err != nil {
 		log.Fatalf("Error while loading public key. %v", err)
 	}
-	PublicKey, err = jwt.ParseRSAPublicKeyFromPEM(pubBytes)
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(pubBytes)
 	if err != nil {
 		log.Fatalf("Error while parsing public .pem data. %v", err)
 	}
+	return privateKey, publicKey
 }

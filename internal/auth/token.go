@@ -12,7 +12,7 @@ import (
 	"github.com/louisxponce/vehicleapi/internal/clients"
 )
 
-func TokenHandler(clients map[string]clients.AuthClient, privateKey *rsa.PrivateKey, tokenExpiry time.Duration) http.HandlerFunc {
+func TokenHandler(clientStore *clients.InMemoryStore, privateKey *rsa.PrivateKey, tokenExpiry time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Extracting credentials")
 		clientId := r.FormValue("client_id")
@@ -25,9 +25,15 @@ func TokenHandler(clients map[string]clients.AuthClient, privateKey *rsa.Private
 			}
 		}
 
-		client, ok := clients[clientId]
+		client, ok := clientStore.GetClient(clientId)
 		if !ok || clientSecret != client.Secret {
-			unauthorized(w, "Invalid client credentials")
+			log.Printf("Unauthorized")
+			w.Header().Set("content-type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error":             "invalid_client",
+				"error_description": "Invalid client credentials",
+			})
 			return
 		}
 		log.Printf("Creating token")
@@ -52,14 +58,4 @@ func TokenHandler(clients map[string]clients.AuthClient, privateKey *rsa.Private
 			"expires_in":   strconv.Itoa(int(tokenExpiry.Seconds())),
 		})
 	}
-}
-
-func unauthorized(w http.ResponseWriter, msg string) {
-	log.Printf("Unauthorized")
-	w.Header().Set("content_type", "application/json")
-	w.WriteHeader(http.StatusUnauthorized)
-	json.NewEncoder(w).Encode(map[string]string{
-		"error":             "invalid_client",
-		"error_description": msg,
-	})
 }

@@ -16,9 +16,9 @@ type contextKey string
 
 const claimsKey contextKey = "jwtClaims"
 
-func AuthMiddleware(publicKey *rsa.PublicKey) func(http.HandlerFunc) http.HandlerFunc {
-	return func(next http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
+func AuthMiddleware(publicKey *rsa.PublicKey) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			tokenStr := getBearerToken(r)
 			if tokenStr == "" {
@@ -47,9 +47,15 @@ func AuthMiddleware(publicKey *rsa.PublicKey) func(http.HandlerFunc) http.Handle
 			}
 
 			ctx := context.WithValue(r.Context(), claimsKey, claims)
-			next(w, r.WithContext(ctx))
-		}
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
 	}
+}
+
+// Use this public function to get the claims provided by the jwt token
+func GetClaims(ctx context.Context) (jwt.MapClaims, bool) {
+	claims, ok := ctx.Value(claimsKey).(jwt.MapClaims)
+	return claims, ok
 }
 
 func getBearerToken(r *http.Request) string {
@@ -62,7 +68,7 @@ func getBearerToken(r *http.Request) string {
 
 func unauthorized(w http.ResponseWriter, msg string) {
 	log.Printf("Unauthorized")
-	w.Header().Set("content_type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
 	json.NewEncoder(w).Encode(map[string]string{
 		"error":             "invalid_client",

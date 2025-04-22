@@ -29,5 +29,8 @@ clients.json
 data.json
 vehicles.db*
 # ignore Go build output
-/vehicleapi*
+/vehicleapi
+/vehicleapi.exe
+/main
+/main.exe
 

@@ -1,100 +1,64 @@
 package api
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/louisxponce/vehicleapi/internal/data"
 )
 
-type Vehicle struct {
-	Id    string `json:"id"`
-	Brand string `json:"brand"`
-	Model string `json:"model"`
-	Year  int    `json:"year"`
+type ApiHandler struct {
+	Data *data.DataAccess
 }
 
-func GetAll(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func NewApiHandler(dataAccess *data.DataAccess) *ApiHandler {
+	return &ApiHandler{Data: dataAccess}
+}
 
-		w.Header().Set("Content-Type", "application/json")
-		brand := strings.ToLower(r.URL.Query().Get("brand"))
-		model := strings.ToLower(r.URL.Query().Get("model"))
-		yearStr := r.URL.Query().Get("year")
+// GetAll
+func (h *ApiHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	brand := strings.ToLower(r.URL.Query().Get("brand"))
+	model := strings.ToLower(r.URL.Query().Get("model"))
+	yearStr := strings.TrimSpace(r.URL.Query().Get("year"))
 
-		var args []interface{}
-		var clauses []string
-		if strings.Contains(brand, "*") {
-			clauses = append(clauses, "brand_lc LIKE ?")
-			args = append(args, strings.ToLower(strings.ReplaceAll(brand, "*", "%")))
-		} else if brand != "" {
-			clauses = append(clauses, "brand_lc = ?")
-			args = append(args, brand)
-		}
-
-		if strings.Contains(model, "*") {
-			clauses = append(clauses, "model_lc LIKE ?")
-			args = append(args, strings.ToLower(strings.ReplaceAll(model, "*", "%")))
-		} else if model != "" {
-			clauses = append(clauses, "model_lc = ?")
-			args = append(args, model)
-		}
-
-		if yearStr != "" {
-			clauses = append(clauses, "year = ?")
-			args = append(args, yearStr)
-		}
-
-		query := "SELECT id, brand, model, year FROM vehicle"
-		if len(clauses) > 0 {
-			query += " WHERE " + strings.Join(clauses, " AND ")
-		}
-		log.Printf("%v", query)
-
-		// Prepare the database row
-		rows, err := db.Query(query, args...)
-		if err != nil {
-			http.Error(w, "Database error", http.StatusInternalServerError)
-			log.Printf("Database error. %v", err)
-			return
-		}
-
-		vehicles := []Vehicle{}
-		for rows.Next() {
-			var v Vehicle
-			err := rows.Scan(&v.Id, &v.Brand, &v.Model, &v.Year)
-			if err != nil {
-				log.Printf("Scan error: %v", err)
-				continue
-			}
-			vehicles = append(vehicles, v)
-		}
-		json.NewEncoder(w).Encode(vehicles)
+	vehicles, err := h.Data.GetVehicles(brand, model, yearStr)
+	if err != nil {
+		log.Printf("Data access error. %v", err)
+		writeJSONError(w, http.StatusInternalServerError, "Data access error")
+		return
+	}
+	if err := json.NewEncoder(w).Encode(vehicles); err != nil {
+		log.Printf("Failed to encode response: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, "Failed to encode response")
 	}
 }
 
-func GetSingle(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-		log.Println("Requested id:", id)
-
-		row := db.QueryRow("SELECT id, brand, model, year FROM vehicle WHERE id = ?", id)
-		var v Vehicle
-		err := row.Scan(&v.Id, &v.Brand, &v.Model, &v.Year)
-		if err == sql.ErrNoRows {
-			// log.Printf("No record found.")
-			http.NotFound(w, r)
-			return
-		}
-		if err != nil {
-			http.Error(w, "Database error.", http.StatusInternalServerError)
-			log.Printf("DB error: %v", err)
-			return
-		}
-		// log.Printf("Record found. %v", v)
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(v)
+// GetSingle
+func (h *ApiHandler) GetSingle(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	log.Println("Requested id:", id)
+	v, err := h.Data.GetVehicle(id)
+	if err != nil {
+		log.Printf("Data access error. %v", err)
+		writeJSONError(w, http.StatusInternalServerError, "Data access error")
+		return
 	}
+	if v == nil {
+		log.Printf("Couldn't find id: %s", id)
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(v)
+}
+
+func writeJSONError(w http.ResponseWriter, code int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": message,
+	})
 }

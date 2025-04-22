@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -e  # Exit on error
 
 if [ "$#" -ne 2 ]; then
@@ -17,14 +16,11 @@ BUILD_PATH="./cmd/vehicleapi"
 echo "🔨 Building Go binary..."
 go build -o $APP_NAME $BUILD_PATH
 
-scp $APP_NAME $REMOTE_USER@$REMOTE_HOST:$TEMP_REMOTE_PATH
+echo "📦 Copying binary to remote..."
+scp $APP_NAME $REMOTE_USER@$REMOTE_HOST:/home/$REMOTE_USER/
 
 echo "🚀 Moving binary and restarting service..."
-echo "ssh command: sudo mv /home/$REMOTE_USER/$APP_NAME $REMOTE_PATH/$APP_NAME"
-
 ssh $REMOTE_USER@$REMOTE_HOST "sudo mv /home/$REMOTE_USER/$APP_NAME $REMOTE_PATH/$APP_NAME"
-echo "File was correctly moved."
-echo "ssh command: sudo /usr/bin/systemctl restart $SERVICE_NAME && sudo /usr/bin/systemctl status $SERVICE_NAME --no-pager"
 ssh $REMOTE_USER@$REMOTE_HOST "sudo /usr/bin/systemctl restart $SERVICE_NAME && sudo /usr/bin/systemctl status $SERVICE_NAME --no-pager"
 
 echo "✅ Deployment complete."

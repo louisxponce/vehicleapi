@@ -10,9 +10,8 @@ type AuthClient struct {
 	Secret string `json:"secret"`
 }
 
-// Auth
 // Reads the contents of the client file into memory
-func LoadClientIds() map[string]AuthClient {
+func LoadAuthClients() map[string]AuthClient {
 	log.Printf("loading client information...")
 	file, err := os.Open("clients.json")
 	if err != nil {
@@ -27,4 +26,17 @@ func LoadClientIds() map[string]AuthClient {
 		log.Fatalf("Failed to parse client data.")
 	}
 	return clients
+}
+
+type InMemoryStore struct {
+	Clients map[string]AuthClient
+}
+
+func NewInMemoryStore(clients map[string]AuthClient) *InMemoryStore {
+	return &InMemoryStore{Clients: clients}
+}
+
+func (s *InMemoryStore) GetClient(id string) (AuthClient, bool) {
+	client, ok := s.Clients[id]
+	return client, ok
 }
