@@ -87,7 +87,7 @@ func (r *DataAccess) GetVehicles(brand string, model string, yearStr string) ([]
 	if len(clauses) > 0 {
 		query += " WHERE " + strings.Join(clauses, " AND ")
 	}
-	log.Printf("%v", query)
+	// log.Printf("%v", query)
 
 	// Prepare the database row
 	rows, err := r.DB.Query(query, args...)
