@@ -25,10 +25,11 @@ func TokenHandler(clientStore *clients.InMemoryStore, privateKey *rsa.PrivateKey
 			}
 		}
 
+		w.Header().Set("content-type", "application/json")
+
 		client, ok := clientStore.GetClient(clientId)
 		if !ok || clientSecret != client.Secret {
 			log.Printf("Unauthorized")
-			w.Header().Set("content-type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{
 				"error":             "invalid_client",
