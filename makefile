@@ -1,6 +1,6 @@
 APP ?= vehicleapi
 BIN_DIR := bin
-BUILD_PATH="."
+BUILD_PATH= .
 
 .PHONY: all build arm64 darwin-arm64 armv7 clean
 all: build

@@ -4,20 +4,20 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/louisxponce/vehicleapi/clients"
-	"github.com/louisxponce/vehicleapi/config"
-	"github.com/louisxponce/vehicleapi/data"
-	"github.com/louisxponce/vehicleapi/router"
+	"github.com/louisxponce/vehicleapi/auth"
+	"github.com/louisxponce/vehicleapi/internal/api"
+	"github.com/louisxponce/vehicleapi/internal/config"
+	"github.com/louisxponce/vehicleapi/internal/data"
 )
 
 func main() {
 
-	config := config.LoadConfig()
-	authClients := clients.LoadAuthClients()
-	clientStore := clients.NewInMemoryStore(authClients)
+	cfg := config.LoadConfig()
+	authClients := auth.LoadAuthClients()
+	clientStore := auth.NewInMemoryStore(authClients)
 	dataAccess := data.NewDataAccess()
 
-	r := router.NewRouter(dataAccess, clientStore, config)
-	log.Printf("Started listening on port %s", config.HttpPort)
-	log.Fatal(http.ListenAndServe(":"+config.HttpPort, r))
+	r := api.NewRouter(dataAccess, clientStore, cfg)
+	log.Printf("Started listening on port %s", cfg.HttpPort)
+	log.Fatal(http.ListenAndServe(":"+cfg.HttpPort, r))
 }

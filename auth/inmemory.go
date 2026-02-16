@@ -1,4 +1,4 @@
-package clients
+package auth
 
 import (
 	"encoding/json"
@@ -6,9 +6,9 @@ import (
 	"os"
 )
 
-type AuthClient struct {
-	Secret string `json:"secret"`
-}
+// type AuthClient struct {
+// 	Secret string `json:"secret"`
+// }
 
 // Reads the contents of the client file into memory
 func LoadAuthClients() map[string]AuthClient {

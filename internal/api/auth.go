@@ -1,4 +1,4 @@
-package middleware
+package api
 
 import (
 	"context"
@@ -60,8 +60,8 @@ func GetClaims(ctx context.Context) (jwt.MapClaims, bool) {
 
 func getBearerToken(r *http.Request) string {
 	auth := r.Header.Get("Authorization")
-	if strings.HasPrefix(auth, "Bearer ") {
-		return strings.TrimPrefix(auth, "Bearer ")
+	if after, ok := strings.CutPrefix(auth, "Bearer "); ok {
+		return after
 	}
 	return ""
 }

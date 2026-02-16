@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/louisxponce/vehicleapi/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -59,7 +58,7 @@ func NewDataAccess() *DataAccess {
 }
 
 // GetVehicles
-func (r *DataAccess) GetVehicles(brand string, model string, yearStr string) ([]models.Vehicle, error) {
+func (r *DataAccess) GetVehicles(brand string, model string, yearStr string) ([]Vehicle, error) {
 	var args []any
 	var clauses []string
 	if strings.Contains(brand, "*") {
@@ -96,9 +95,9 @@ func (r *DataAccess) GetVehicles(brand string, model string, yearStr string) ([]
 		return nil, err
 	}
 
-	vehicles := []models.Vehicle{}
+	vehicles := []Vehicle{}
 	for rows.Next() {
-		var v models.Vehicle
+		var v Vehicle
 		err := rows.Scan(&v.Id, &v.Brand, &v.Model, &v.Year)
 		if err != nil {
 			log.Printf("Scan error: %v", err)
@@ -110,9 +109,9 @@ func (r *DataAccess) GetVehicles(brand string, model string, yearStr string) ([]
 }
 
 // GetVechicle
-func (r *DataAccess) GetVehicle(id string) (*models.Vehicle, error) {
+func (r *DataAccess) GetVehicle(id string) (*Vehicle, error) {
 	row := r.DB.QueryRow("SELECT id, brand, model, year FROM vehicle WHERE id = ?", id)
-	var v models.Vehicle
+	var v Vehicle
 	err := row.Scan(&v.Id, &v.Brand, &v.Model, &v.Year)
 	if err == sql.ErrNoRows {
 		return nil, err

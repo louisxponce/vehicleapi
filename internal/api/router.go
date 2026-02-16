@@ -1,19 +1,17 @@
-package router
+package api
 
 import (
 	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/louisxponce/vehicleapi/internal/api"
-	"github.com/louisxponce/vehicleapi/internal/auth"
-	"github.com/louisxponce/vehicleapi/internal/clients"
+	"github.com/louisxponce/vehicleapi/auth"
 	"github.com/louisxponce/vehicleapi/internal/config"
 	"github.com/louisxponce/vehicleapi/internal/data"
-	"github.com/louisxponce/vehicleapi/internal/middleware"
 )
 
-func NewRouter(dataAccess *data.DataAccess, clientStore *clients.InMemoryStore, cfg *config.Config) http.Handler {
+// func NewRouter(dataAccess *data.DataAccess, clientStore *auth.InMemoryStore, cfg *config.Config) http.Handler {
+func NewRouter(dataAccess *data.DataAccess, clientStore auth.Store, cfg *config.Config) http.Handler {
 
 	log.Printf("Setting up server routes and auth middleware")
 	r := chi.NewRouter()
@@ -23,9 +21,9 @@ func NewRouter(dataAccess *data.DataAccess, clientStore *clients.InMemoryStore, 
 	// r.Get("/myip")
 
 	// Handler for the api part
-	handler := api.NewApiHandler(dataAccess)
+	handler := NewApiHandler(dataAccess)
 	r.Route("/api/vehicles", func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware(cfg.PublicKey))
+		r.Use(AuthMiddleware(cfg.PublicKey))
 		r.Get("/", handler.GetAll)
 		r.Get("/{id}", handler.GetSingle)
 	})

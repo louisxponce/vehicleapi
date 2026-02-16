@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/louisxponce/vehicleapi/data"
+	"github.com/louisxponce/vehicleapi/internal/data"
 )
 
 type ApiHandler struct {

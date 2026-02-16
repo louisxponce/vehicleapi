@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/louisxponce/vehicleapi/internal/clients"
 )
 
-func TokenHandler(clientStore *clients.InMemoryStore, privateKey *rsa.PrivateKey, tokenExpiry time.Duration) http.HandlerFunc {
+// func TokenHandler(clientStore *InMemoryStore, privateKey *rsa.PrivateKey, tokenExpiry time.Duration) http.HandlerFunc {
+func TokenHandler(clientStore Store, privateKey *rsa.PrivateKey, tokenExpiry time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Extracting credentials")
 		clientId := r.FormValue("client_id")
