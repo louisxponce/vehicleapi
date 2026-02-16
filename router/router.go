@@ -13,17 +13,16 @@ import (
 	"github.com/louisxponce/vehicleapi/internal/middleware"
 )
 
-func NewRouter(
-	dataAccess *data.DataAccess,
-	clientStore *clients.InMemoryStore,
-	// authClients map[string]clients.AuthClient,
-	cfg *config.Config,
-) http.Handler {
+func NewRouter(dataAccess *data.DataAccess, clientStore *clients.InMemoryStore, cfg *config.Config) http.Handler {
 
 	log.Printf("Setting up server routes and auth middleware")
 	r := chi.NewRouter()
-	r.Post("/api/token", auth.TokenHandler(clientStore, cfg.PrivateKey, cfg.TokenExpiry))
 
+	// Handler for the provider part
+	r.Post("/api/token", auth.TokenHandler(clientStore, cfg.PrivateKey, cfg.TokenExpiry))
+	// r.Get("/myip")
+
+	// Handler for the api part
 	handler := api.NewApiHandler(dataAccess)
 	r.Route("/api/vehicles", func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(cfg.PublicKey))

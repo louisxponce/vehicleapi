@@ -4,10 +4,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/louisxponce/vehicleapi/internal/clients"
-	"github.com/louisxponce/vehicleapi/internal/config"
-	"github.com/louisxponce/vehicleapi/internal/data"
-	"github.com/louisxponce/vehicleapi/internal/router"
+	"github.com/louisxponce/vehicleapi/clients"
+	"github.com/louisxponce/vehicleapi/config"
+	"github.com/louisxponce/vehicleapi/data"
+	"github.com/louisxponce/vehicleapi/router"
 )
 
 func main() {

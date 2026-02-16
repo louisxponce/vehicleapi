@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/louisxponce/vehicleapi/internal/models"
+	"github.com/louisxponce/vehicleapi/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 

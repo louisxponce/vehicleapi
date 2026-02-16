@@ -17,7 +17,9 @@ func TokenHandler(clientStore *clients.InMemoryStore, privateKey *rsa.PrivateKey
 		log.Printf("Extracting credentials")
 		clientId := r.FormValue("client_id")
 		clientSecret := r.FormValue("client_secret")
-		if clientId == "" && clientSecret == "" {
+
+		// Fallback to BasicAuth if either clientId or clientSecret wasn't provided
+		if clientId == "" || clientSecret == "" {
 			username, password, ok := r.BasicAuth()
 			if ok {
 				clientId = username
