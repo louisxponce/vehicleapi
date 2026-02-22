@@ -18,7 +18,7 @@ func NewRouter(dataAccess *data.DataAccess, clientStore auth.Store, cfg *config.
 
 	// Handler for the provider part
 	r.Post("/api/token", auth.TokenHandler(clientStore, cfg.PrivateKey, cfg.TokenExpiry))
-	// r.Get("/myip")
+	r.Get("/myip", MyIpHandler)
 
 	// Handler for the api part
 	handler := NewApiHandler(dataAccess)
